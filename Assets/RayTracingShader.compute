@@ -12,8 +12,7 @@ float2 _PixelOffset;
 Texture2D<float4> _SkyboxTexture;
 SamplerState sampler_SkyboxTexture;
 
-static const float PI = 3.14159265;
-static const float3 SHADOW = float3(0, 0, 0);
+static const float PI = 3.14159265f;
 
 struct Sphere
 {
@@ -42,19 +41,19 @@ Ray CreateRay(float3 origin, float3 direction)
     Ray ray;
     ray.origin = origin;
     ray.direction = direction;
-    ray.energy = float3(1.0, 1.0, 1.0);
+    ray.energy = float3(1.0f, 1.0f, 1.0f);
     return ray;
 }
 
 Ray CreateCameraRay(float2 uv)
 {
     // Transform the camera origin to world space
-    float3 origin = mul(_CameraToWorld, float4(0.0, 0.0, 0.0, 1.0)).xyz;
+    float3 origin = mul(_CameraToWorld, float4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
     
     // Invert the perspective projection of the view-space position
-    float3 direction = mul(_CameraInverseProjection, float4(uv, 0.0, 1.0)).xyz;
+    float3 direction = mul(_CameraInverseProjection, float4(uv, 0.0f, 1.0f)).xyz;
     // Transform the direction from camera to world space and normalize
-    direction = mul(_CameraToWorld, float4(direction, 0.0)).xyz;
+    direction = mul(_CameraToWorld, float4(direction, 0.0f)).xyz;
     direction = normalize(direction);
 
     return CreateRay(origin, direction);
@@ -76,11 +75,11 @@ struct RayHit
 RayHit CreateRayHit()
 {
     RayHit hit;
-    hit.position = float3(0.0, 0.0, 0.0);
+    hit.position = float3(0.0f, 0.0f, 0.0f);
     hit.distance = 1.#INF;
-    hit.normal = float3(0.0, 0.0, 0.0);
-    hit.albedo = float3(0.0, 0.0, 0.0);
-    hit.specular = float3(0.0, 0.0, 0.0);
+    hit.normal = float3(0.0f, 0.0f, 0.0f);
+    hit.albedo = float3(0.0f, 0.0f, 0.0f);
+    hit.specular = float3(0.0f, 0.0f, 0.0f);
     return hit;
 }
 
@@ -96,9 +95,9 @@ void IntersectGroundPlane(Ray ray, inout RayHit bestHit)
     {
         bestHit.distance = t;
         bestHit.position = ray.origin + t * ray.direction;
-        bestHit.normal = float3(0.0, 1.0, 0.0);
-        bestHit.albedo = 0.8;
-        bestHit.specular = 0.03;
+        bestHit.normal = float3(0.0f, 1.0f, 0.0f);
+        bestHit.albedo = 0.8f;
+        bestHit.specular = 0.03f;
     }
 }
 
@@ -135,7 +134,9 @@ RayHit Trace(Ray ray)
     IntersectGroundPlane(ray, bestHit);
 
     // Trace spheres
-    for (int i = 0; i < _NumSpheres; i++)
+    //uint numSpheres, stride;
+    //_Spheres.GetDimensions(numSpheres, stride);
+    for (uint i = 0; i < _NumSpheres; i++)
         IntersectSphere(ray, bestHit, i);
     return bestHit;
 }
@@ -149,17 +150,17 @@ float3 Shade(inout Ray ray, RayHit hit)
     if (hit.distance < 1.#INF)
     {
         // Reflect the ray and multiply energy with specular reflection
-        ray.origin = hit.position + hit.normal * 0.001;
+        ray.origin = hit.position + hit.normal * 0.001f;
         ray.direction = reflect(ray.direction, hit.normal);
         ray.energy *= hit.specular;
 
         // Shadow test ray
         bool shadow = false;
-        Ray shadowRay = CreateRay(hit.position + hit.normal * 0.001, -1 * _DirectionalLight.xyz);
+        Ray shadowRay = CreateRay(hit.position + hit.normal * 0.001f, -1 * _DirectionalLight.xyz);
         RayHit shadowHit = Trace(shadowRay);
         if (shadowHit.distance != 1.#INF)
         {
-            return SHADOW;
+            return float3(0.0f, 0.0f, 0.0f);
         }
 
         // Return a diffuse-shaded color
@@ -168,12 +169,12 @@ float3 Shade(inout Ray ray, RayHit hit)
     else
     {
         // Erase the ray's energy - the sky doesn't reflect anything
-        ray.energy = 0.0;
+        ray.energy = 0.0f;
 
         // Sample the skybox and write it
         float theta = acos(ray.direction.y) / -PI;
-        float phi = atan2(ray.direction.x, -ray.direction.z) / -PI * 0.5;
-        return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz * 1.8;
+        float phi = atan2(ray.direction.x, -ray.direction.z) / -PI * 0.5f;
+        return _SkyboxTexture.SampleLevel(sampler_SkyboxTexture, float2(phi, theta), 0).xyz * 1.8f;
     }
 }
 
@@ -189,7 +190,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     Result.GetDimensions(width, height);
 
     // Transform pixel to [-1,1] range
-    float2 uv = float2((id.xy + _PixelOffset) / float2(width, height) * 2.0 - 1.0);
+    float2 uv = float2((id.xy + _PixelOffset) / float2(width, height) * 2.0f - 1.0f);
 
     // Get a ray for the UVs
     Ray ray = CreateCameraRay(uv);
