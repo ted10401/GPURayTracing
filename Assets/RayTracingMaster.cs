@@ -6,6 +6,7 @@ public class RayTracingMaster : MonoBehaviour
     public ComputeShader RayTracingShader;
     public Texture SkyboxTexture;
     public Light DirectionalLight;
+    public int NumBoundings = 8;
 
     [Header("Spheres")]
     public Vector2 SphereRadius = new Vector2(3.0f, 8.0f);
@@ -90,7 +91,7 @@ public class RayTracingMaster : MonoBehaviour
 
             // Albedo and specular color
             Color color = Random.ColorHSV();
-            bool metal = Random.value < 0.5f;
+            bool metal = Random.value < 0.9f;
             sphere.albedo = metal ? Vector4.zero : new Vector4(color.r, color.g, color.b);
             sphere.specular = metal ? new Vector4(color.r, color.g, color.b) : new Vector4(0.04f, 0.04f, 0.04f);
 
@@ -126,6 +127,8 @@ public class RayTracingMaster : MonoBehaviour
             RayTracingShader.SetBuffer(0, "_Spheres", _sphereBuffer);
             RayTracingShader.SetInt("_NumSpheres", _sphereBuffer.count);
         }
+
+        RayTracingShader.SetInt("_NumBoundings", NumBoundings);
     }
 
     private void InitRenderTexture()

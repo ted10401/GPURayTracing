@@ -24,6 +24,7 @@ struct Sphere
 
 StructuredBuffer<Sphere> _Spheres;
 int _NumSpheres;
+int _NumBoundings;
 
 
 //-------------------------------------
@@ -197,7 +198,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
     // Trace and shade the ray
     float3 result = float3(0, 0, 0);
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < _NumBoundings; i++)
     {
         RayHit hit = Trace(ray);
         result += ray.energy * Shade(ray, hit);
